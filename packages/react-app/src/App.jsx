@@ -244,7 +244,7 @@ function App(props) {
   // EXTERNAL CONTRACT EXAMPLE:
   //
   // If you want to bring in the mainnet DAI contract it would look like:
-  const mainnetContracts = useContractLoader(mainnetProvider, contractConfig);
+  // const mainnetContracts = useContractLoader(mainnetProvider, contractConfig);
 
   // If you want to call a function on a new block
   useOnBlock(mainnetProvider, () => {
@@ -252,12 +252,12 @@ function App(props) {
   });
 
   // Then read your DAI balance like:
-  const myMainnetDAIBalance = useContractReader(mainnetContracts, "DAI", "balanceOf", [
-    "0x34aA3F359A9D614239015126635CE7732c18fDF3",
-  ]);
+  // const myMainnetDAIBalance = useContractReader(mainnetContracts, "DAI", "balanceOf", [
+  //   "0x34aA3F359A9D614239015126635CE7732c18fDF3",
+  // ]);
 
   // keep track of a variable from the contract in the local React state:
-  const purpose = useContractReader(readContracts, "DiceGame", "purpose");
+  // const purpose = useContractReader(readContracts, "DiceGame", "purpose");
 
   /*
   const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
@@ -276,8 +276,8 @@ function App(props) {
       yourLocalBalance &&
       yourMainnetBalance &&
       readContracts &&
-      writeContracts &&
-      mainnetContracts
+      writeContracts// &&
+    //  mainnetContracts
     ) {
       console.log("_____________________________________ 🏗 scaffold-eth _____________________________________");
       console.log("🌎 mainnetProvider", mainnetProvider);
@@ -299,7 +299,7 @@ function App(props) {
     yourMainnetBalance,
     readContracts,
     writeContracts,
-    mainnetContracts,
+   // mainnetContracts,
   ]);
 
   let networkDisplay = "";
@@ -449,71 +449,71 @@ function App(props) {
     );
   }
 
-  const winnerEvents = useEventListener(readContracts, "DiceGame", "Winner");
-  const rollEvents = useEventListener(readContracts, "DiceGame", "Roll");
-  const prize = useContractReader(readContracts, "DiceGame", "prize");
+  // const winnerEvents = useEventListener(readContracts, "DiceGame", "Winner");
+  // const rollEvents = useEventListener(readContracts, "DiceGame", "Roll");
+  // const prize = useContractReader(readContracts, "DiceGame", "prize");
 
-  const [diceRolled, setDiceRolled] = useState(false);
-  const [diceRollImage, setDiceRollImage] = useState(null);
-  const [claiming, setClaiming] = useState(false);
+  // const [diceRolled, setDiceRolled] = useState(false);
+  // const [diceRollImage, setDiceRollImage] = useState(null);
+  // const [claiming, setClaiming] = useState(false);
 
-  let diceRollImg = "";
-  if (diceRollImage) {
-    diceRollImg = <img style={{ width: "300px", heigth: "300px" }} src={diceImages[`${diceRollImage}.png`].default} />;
-  }
+  // let diceRollImg = "";
+  // if (diceRollImage) {
+  //   diceRollImg = <img style={{ width: "300px", heigth: "300px" }} src={diceImages[`${diceRollImage}.png`].default} />;
+  // }
 
-  const rollTheDice = async () => {
-    setDiceRolled(true);
-    setDiceRollImage("ROLL");
+  // const rollTheDice = async () => {
+  //   setDiceRolled(true);
+  //   setDiceRollImage("ROLL");
 
-    tx(writeContracts.DiceGame.rollTheDice({ value: ethers.utils.parseEther("0.002"), gasLimit: 500000 }), update => {
-      if (update?.status === "failed") {
-        setDiceRolled(false);
-        //setDiceRollImage(null);
-      }
-    });
-  };
+  //   tx(writeContracts.DiceGame.rollTheDice({ value: ethers.utils.parseEther("0.002"), gasLimit: 500000 }), update => {
+  //     if (update?.status === "failed") {
+  //       setDiceRolled(false);
+  //       //setDiceRollImage(null);
+  //     }
+  //   });
+  // };
 
   
-  const riggedRoll = async () => {
-    tx(writeContracts.RiggedRoll.riggedRoll({ gasLimit: 500000 }), update => {
-      console.log("TX UPDATE", update);
-      if (update?.status === "sent" || update?.status === 1) {
-        setDiceRolled(true);
-        setDiceRollImage("ROLL");
-      }
-      if (update?.status === "failed") {
-        setDiceRolled(false);
-        //setDiceRollImage(null);
-      }
-      if (update?.status == 1 || update?.status == "confirmed") {
-        setTimeout(() => {
-          setDiceRolled(false);
-        }, 1500);
-      }
-    });
-  };
+  // const riggedRoll = async () => {
+  //   tx(writeContracts.RiggedRoll.riggedRoll({ gasLimit: 500000 }), update => {
+  //     console.log("TX UPDATE", update);
+  //     if (update?.status === "sent" || update?.status === 1) {
+  //       setDiceRolled(true);
+  //       setDiceRollImage("ROLL");
+  //     }
+  //     if (update?.status === "failed") {
+  //       setDiceRolled(false);
+  //       //setDiceRollImage(null);
+  //     }
+  //     if (update?.status == 1 || update?.status == "confirmed") {
+  //       setTimeout(() => {
+  //         setDiceRolled(false);
+  //       }, 1500);
+  //     }
+  //   });
+  // };
 
-  const riggedFilter = readContracts.DiceGame?.filters.Roll(riggedRoll.address, null);
+  // const riggedFilter = readContracts.DiceGame?.filters.Roll(riggedRoll.address, null);
 
-  readContracts.DiceGame?.on(riggedFilter, (_, value) => {
-    if (value) {
-      const numberRolled = value.toNumber().toString(16).toUpperCase();
-      setDiceRollImage(numberRolled);
-      setDiceRolled(false);
-    }
-  });
+  // readContracts.DiceGame?.on(riggedFilter, (_, value) => {
+  //   if (value) {
+  //     const numberRolled = value.toNumber().toString(16).toUpperCase();
+  //     setDiceRollImage(numberRolled);
+  //     setDiceRolled(false);
+  //   }
+  // });
 
 
-  const filter = readContracts.DiceGame?.filters.Roll(address, null);
+  // const filter = readContracts.DiceGame?.filters.Roll(address, null);
 
-  readContracts.DiceGame?.on(filter, (_, value) => {
-    if (value) {
-      const numberRolled = value.toNumber().toString(16).toUpperCase();
-      setDiceRollImage(numberRolled);
-      setDiceRolled(false);
-    }
-  });
+  // readContracts.DiceGame?.on(filter, (_, value) => {
+  //   if (value) {
+  //     const numberRolled = value.toNumber().toString(16).toUpperCase();
+  //     setDiceRollImage(numberRolled);
+  //     setDiceRolled(false);
+  //   }
+  // });
 
   const date = new Date();
 
@@ -552,7 +552,7 @@ function App(props) {
               }}
               to="/"
             >
-              Dice!
+              DEX
             </Link>
           </Menu.Item>
           <Menu.Item key="/debug">
@@ -566,73 +566,15 @@ function App(props) {
             </Link>
           </Menu.Item>
         </Menu>
-        {console.log("roll events: ", rollEvents)}
+        
         <Switch>
           <Route exact path="/">
             <div style={{ display: "flex" }}>
               <div style={{ width: 250, margin: "auto", marginTop: 64 }}>
-                <div>Roll Events:</div>
-                <List
-                  style={{ height: 258, overflow: "hidden" }}
-                  dataSource={rollEvents}
-                  renderItem={item => {
-                    return (
-                      <List.Item
-                        key={item.args[0] + " " + item.args[1] + " " + date.getTime() + " " + item.blockNumber}
-                      >
-                        <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
-                        &nbsp;Roll:&nbsp;{item.args[1].toNumber().toString(16).toUpperCase()}
-                      </List.Item>
-                    );
-                  }}
-                />
-              </div>
-              <div id="centerWrapper" style={{ padding: 16 }}>
-                <h2>Roll a 0, 1, or 2 to win the prize!</h2>
-                <Balance balance={prize} dollarMultiplier={price} fontSize={32} />
-                <div style={{ padding: 16, format: "flex", flexDirection: "row" }}>
-                  <Button type="primary" disabled={diceRolled} onClick={rollTheDice}>
-                    Roll the dice!
-                  </Button>
-                  
-                  <div style={{ padding: 16 }}>
-                    <Account
-                      address={readContracts?.RiggedRoll?.address}
-                      localProvider={localProvider}
-                      userSigner={false}
-                      mainnetProvider={mainnetProvider}
-                      price={price}
-                      web3Modal={false}
-                      loadWeb3Modal={false}
-                      logoutOfWeb3Modal={false}
-                      blockExplorer={blockExplorer}
-                    />
-                    <Button style={{ margin: 16 }} type="primary" disabled={diceRolled} onClick={riggedRoll}>
-                      Rigged Roll!
-                    </Button>
-                  </div>
-               
+                <div id="centerWrapper" style={{ padding: 16 }}>
+                  <h2>DEX</h2>                
                 </div>
-                {diceRollImg}
-              </div>
-              <div style={{ width: 250, margin: "auto", marginTop: 32 }}>
-                <div>Winner Events:</div>
-                <List
-                  style={{ height: 258, overflow: "" }}
-                  dataSource={winnerEvents}
-                  renderItem={item => {
-                    return (
-                      <List.Item
-                        key={item.args[0] + " " + item.args[1] + " " + date.getTime() + " " + item.blockNumber}
-                      >
-                        <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
-                        <br></br>
-                        <Balance balance={item.args[1]} dollarMultiplier={price} />
-                      </List.Item>
-                    );
-                  }}
-                />
-              </div>
+              </div> 
             </div>
              {/* adding slide out debug  */}
       <Button  style={{position : "fixed", right:"26px", top: 130}} type="primary" onClick={showDrawer}>
@@ -669,7 +611,7 @@ function App(props) {
             */}
             <div style={{margin: "auto", width:"70vw"}}>{/* added this div to keep 70vh on the /debug page */}
             <Contract
-              name="DiceGame"
+              name="Realcees"
               price={price}
               signer={userSigner}
               provider={localProvider}
@@ -678,7 +620,7 @@ function App(props) {
               contractConfig={contractConfig}
             />
             <Contract
-              name="RiggedRoll"
+              name="Dex"
               price={price}
               signer={userSigner}
               provider={localProvider}
