@@ -1,6 +1,6 @@
 import Portis from "@portis/web3";
 import WalletConnectProvider from "@walletconnect/web3-provider";
-import { Alert, Button, Col, List, Menu, Row, Drawer } from "antd";
+import { Alert, Button, Col, List, Menu, Row, Drawer, Card } from "antd";
 import "antd/dist/antd.css";
 import Authereum from "authereum";
 import {
@@ -20,7 +20,7 @@ import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
 import WalletLink from "walletlink";
 import Web3Modal from "web3modal";
 import "./App.css";
-import { Address, Account, Balance, Contract, Faucet, GasGauge, Header, Ramp, ThemeSwitch } from "./components";
+import { Address, Account, Balance, Contract, Faucet, GasGauge, Header, Ramp, ThemeSwitch, TokenBalance, Dex , Events} from "./components";
 import { INFURA_ID, NETWORK, NETWORKS, ALCHEMY_KEY } from "./constants";
 import externalContracts from "./contracts/external_contracts";
 // contracts
@@ -28,6 +28,7 @@ import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor } from "./helpers";
 // import Hints from "./Hints";
 import { ExampleUI, Hints, Subgraph } from "./views";
+import cmLogo from "./images/cm_logo.jpg"
 
 function importAll(r) {
   let images = {};
@@ -237,6 +238,7 @@ function App(props) {
 
   // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider, contractConfig);
+  const liquidity = useContractReader(readContracts, "DEX", "getLiquidity", [address]);
 
   // If you want to make 🔐 write transactions to your contracts, use the userSigner:
   const writeContracts = useContractLoader(userSigner, contractConfig, localChainId);
@@ -449,74 +451,6 @@ function App(props) {
     );
   }
 
-  // const winnerEvents = useEventListener(readContracts, "DiceGame", "Winner");
-  // const rollEvents = useEventListener(readContracts, "DiceGame", "Roll");
-  // const prize = useContractReader(readContracts, "DiceGame", "prize");
-
-  // const [diceRolled, setDiceRolled] = useState(false);
-  // const [diceRollImage, setDiceRollImage] = useState(null);
-  // const [claiming, setClaiming] = useState(false);
-
-  // let diceRollImg = "";
-  // if (diceRollImage) {
-  //   diceRollImg = <img style={{ width: "300px", heigth: "300px" }} src={diceImages[`${diceRollImage}.png`].default} />;
-  // }
-
-  // const rollTheDice = async () => {
-  //   setDiceRolled(true);
-  //   setDiceRollImage("ROLL");
-
-  //   tx(writeContracts.DiceGame.rollTheDice({ value: ethers.utils.parseEther("0.002"), gasLimit: 500000 }), update => {
-  //     if (update?.status === "failed") {
-  //       setDiceRolled(false);
-  //       //setDiceRollImage(null);
-  //     }
-  //   });
-  // };
-
-  
-  // const riggedRoll = async () => {
-  //   tx(writeContracts.RiggedRoll.riggedRoll({ gasLimit: 500000 }), update => {
-  //     console.log("TX UPDATE", update);
-  //     if (update?.status === "sent" || update?.status === 1) {
-  //       setDiceRolled(true);
-  //       setDiceRollImage("ROLL");
-  //     }
-  //     if (update?.status === "failed") {
-  //       setDiceRolled(false);
-  //       //setDiceRollImage(null);
-  //     }
-  //     if (update?.status == 1 || update?.status == "confirmed") {
-  //       setTimeout(() => {
-  //         setDiceRolled(false);
-  //       }, 1500);
-  //     }
-  //   });
-  // };
-
-  // const riggedFilter = readContracts.DiceGame?.filters.Roll(riggedRoll.address, null);
-
-  // readContracts.DiceGame?.on(riggedFilter, (_, value) => {
-  //   if (value) {
-  //     const numberRolled = value.toNumber().toString(16).toUpperCase();
-  //     setDiceRollImage(numberRolled);
-  //     setDiceRolled(false);
-  //   }
-  // });
-
-
-  // const filter = readContracts.DiceGame?.filters.Roll(address, null);
-
-  // readContracts.DiceGame?.on(filter, (_, value) => {
-  //   if (value) {
-  //     const numberRolled = value.toNumber().toString(16).toUpperCase();
-  //     setDiceRollImage(numberRolled);
-  //     setDiceRolled(false);
-  //   }
-  // });
-
-  const date = new Date();
-
  //adding slide out debug states 
  const [debugContractToShow, setDebugContractToShow] = useState('');
 
@@ -551,10 +485,16 @@ function App(props) {
                 setRoute("/");
               }}
               to="/"
-            >
-              DEX
+            > DEX
+            
             </Link>
           </Menu.Item>
+          <Menu.Item key="/Events">
+          <Link onClick={() => {
+            setRoute("/Events");
+          }} 
+          to="/Events">Eventlist</Link>
+        </Menu.Item>
           <Menu.Item key="/debug">
             <Link
               onClick={() => {
@@ -569,14 +509,40 @@ function App(props) {
         
         <Switch>
           <Route exact path="/">
-            <div style={{ display: "flex" }}>
-              <div style={{ width: 250, margin: "auto", marginTop: 64 }}>
-                <div id="centerWrapper" style={{ padding: 16 }}>
-                  <h2>DEX</h2>                
-                </div>
-              </div> 
-            </div>
-             {/* adding slide out debug  */}
+             {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
+          {readContracts && readContracts.DEX && address && localProvider ? (
+            <Dex
+              tx={tx}
+              writeContracts={writeContracts}
+              localProvider={localProvider}
+              mainnetProvider={mainnetProvider}
+              blockExplorer={blockExplorer}
+              address={address} //this is causing issues
+              readContracts={readContracts} //this is causing issues
+              contractConfig={contractConfig}
+              signer={userSigner}
+              price={price}
+            />
+          ) : (
+            ""
+          )}
+          {/* TODO: The DEX.jsx file actually logs a bunch of the results so we think that instead of creating completely new event components (or whatever), we would figure out how to work with the txs that are happening as a result of EthersJS calling the respective functions in DEX.jsx. 😵 Lines 321-335 are an example of attempting to place emitted events on the front-page UI. It is not working though for now! */}
+          {/* <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
+            <div>👀 DEX Events:</div>
+            <List
+              dataSource={EthToTokenSwapEvents}
+              renderItem={item => {
+                return (
+                  <List.Item key={item.blockNumber}>
+                    <Address value={item.args[0]} ensProvider={localProvider} fontSize={16} />
+                    <Balance tokenOutput={item.args[1]} />
+                    <Balance ethInput={item.args[2]} />
+                  </List.Item>
+                );
+              }}
+            />
+          </div> */}
+          {/* adding slide out debug  */}
       <Button  style={{position : "fixed", right:"26px", top: 130}} type="primary" onClick={showDrawer}>
           Debug Contracts
       </Button>
@@ -588,10 +554,11 @@ function App(props) {
         onClose={onClose}
         visible={visible}
         key="right">
-         
+         <Address value={address} />
         <Menu selectedKeys={debugContractToShow} mode="horizontal">          
           {contractsToShow}
         </Menu>
+        
         <Contract
             name={debugContractToShow}
             price={price}
@@ -602,6 +569,45 @@ function App(props) {
             contractConfig={contractConfig}
           /> 
       </Drawer>
+        </Route>
+        <Route path="/Events">
+          <Events
+            contracts={readContracts}
+            contractName="DEX"
+            eventName="EthToTokenSwap"
+            localProvider={localProvider}
+            mainnetProvider={mainnetProvider}
+            startBlock={1}
+          />
+
+          <Events
+            contracts={readContracts}
+            contractName="DEX"
+            eventName="TokenToEthSwap"
+            localProvider={localProvider}
+            mainnetProvider={mainnetProvider}
+            startBlock={1}
+          />
+
+          <Events
+            contracts={readContracts}
+            contractName="DEX"
+            eventName="LiquidityProvided"
+            localProvider={localProvider}
+            mainnetProvider={mainnetProvider}
+            startBlock={1}
+          />
+
+          <Events
+            contracts={readContracts}
+            contractName="DEX"
+            eventName="LiquidityRemoved"
+            localProvider={localProvider}
+            mainnetProvider={mainnetProvider}
+            startBlock={1}
+          />
+        
+             
           </Route>
           <Route exact path="/debug">
             {/*
@@ -620,7 +626,7 @@ function App(props) {
               contractConfig={contractConfig}
             />
             <Contract
-              name="Dex"
+              name="DEX"
               price={price}
               signer={userSigner}
               provider={localProvider}
@@ -648,6 +654,10 @@ function App(props) {
           logoutOfWeb3Modal={logoutOfWeb3Modal}
           blockExplorer={blockExplorer}
         />
+        <TokenBalance name={"Realcees"} img={"🤘"} address={address} contracts={readContracts} />
+        <h3>
+          💦💦: <TokenBalance balance={liquidity} />
+        </h3>
         {faucetHint}
       </div>
 

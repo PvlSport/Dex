@@ -18,17 +18,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // Getting a previously deployed contract
   const realcees = await ethers.getContract("Realcees", deployer);
 
-  // await deploy("DEX", {
-  //   // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
-  //   args: [realcees.address],
-  //   log: true,
-  //   waitConfirmations: 5,
-  // });
+  await deploy("DEX", {
+    // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
+    from: deployer,
+    args: [realcees.address],
+    log: true,
+    waitConfirmations: 5,
+  });
   
-  // await realcees.transfer(
-  //   "0xEAAC25154a1D9c5d1bE03e95096A7D8aDBf505a2",
-  //   "" + 10 * 10 ** 18
-  // );
+  const dex = await ethers.getContract("DEX", deployer);
+  await realcees.approve(dex.address, ethers.utils.parseEther("5"));
+
+  await dex.init(ethers.utils.parseEther("5"), {
+    value: ethers.utils.parseEther("5"),
+    gasLimit: 200000,
+  });
 
 };
 module.exports.tags = ["Realcees", "DEX"];

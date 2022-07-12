@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
 
 /**
  * @title DEX Template
@@ -15,6 +16,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract DEX {
     /* ========== GLOBAL VARIABLES ========== */
     mapping (address => uint256) public liquidity ;
+    uint256 public totalLiquidity = 0;
 
     using SafeMath for uint256; //outlines use of SafeMath for uint256 variables
     IERC20 token; //instantiates the imported contract
@@ -51,11 +53,19 @@ contract DEX {
 
     /**
      * @notice initializes amount of tokens that will be transferred to the DEX itself from the erc20 contract mintee (and only them based on how Balloons.sol is written). Loads contract up with both ETH and Balloons.
-     * @param tokens amount to be transferred to DEX
+     * @param amountOfTokens amount to be transferred to DEX
      * @return totalLiquidity is the number of LPTs minting as a result of deposits made to DEX contract
      * NOTE: since ratio is 1:1, this is fine to initialize the totalLiquidity (wrt to balloons) as equal to eth balance of contract.
      */
-    function init(uint256 tokens) public payable returns (uint256) {}
+    function init(uint256 amountOfTokens) public payable returns (uint256) {
+        require (token.balanceOf(msg.sender) >= amountOfTokens, "not enought tokens !");
+        require (totalLiquidity == 0, "Allready been initialise");
+        require (token.allowance(msg.sender, address(this)) >= amountOfTokens, "Please aprouve the amount First");
+        require (token.transferFrom(msg.sender, address(this), amountOfTokens), "Token transfer fail");
+        totalLiquidity = amountOfTokens;
+        liquidity[msg.sender] = amountOfTokens;
+        return totalLiquidity; 
+    }
 
     /**
      * @notice returns yOutput, or yDelta for xInput (or xDelta)
@@ -65,7 +75,12 @@ contract DEX {
         uint256 xInput,
         uint256 xReserves,
         uint256 yReserves
-    ) public view returns (uint256 yOutput) {}
+    ) public view returns (uint256 yOutput) {
+        uint256 xInputWithFee = xInput.mul(997);
+        uint256 numerator = xInputWithFee.mul(yReserves);
+        uint256 denominator = (xReserves.mul(1000)).add(xInputWithFee);
+        return (numerator / denominator);
+    }
 
     /**
      * @notice returns liquidity for a user. Note this is not needed typically due to the `liquidity()` mapping variable being public and having a getter as a result. This is left though as it is used within the front end code (App.jsx).
@@ -77,12 +92,25 @@ contract DEX {
     /**
      * @notice sends Ether to DEX in exchange for $BAL
      */
-    function ethToToken() public payable returns (uint256 tokenOutput) {}
+    function ethToToken() public payable returns (uint256 tokenOutput) { 
+        uint256 amountTokenOutput = price(msg.value, address(this).balance.sub(msg.value), token.balanceOf(address(this)));//was reviewed ... because address(this).balance allready contain the message value !
+        console.log("amountTokenOUtput : ",amountTokenOutput );
+        require (token.transfer(msg.sender, amountTokenOutput), "tokens transfer Fail ");
+        return amountTokenOutput;
+    }
 
     /**
      * @notice sends $BAL tokens to DEX in exchange for Ether
      */
-    function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {}
+    function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {
+        require (token.allowance(msg.sender, address(this)) >= tokenInput, "Please aprouve the the contract");
+        uint256 amountEthOUput = price(tokenInput, token.balanceOf(address(this)), address(this).balance);
+        console.log("amountTokenOUtput : ",amountEthOUput );
+        require (token.transferFrom(msg.sender, address(this), amountEthOUput), "Token transfer fail");
+        (bool sucess, ) = payable(msg.sender).call{value : amountEthOUput}("");
+        require (sucess, "eth transfer fail");
+        return amountEthOUput;
+    }
 
     /**
      * @notice allows deposits of $BAL and $ETH to liquidity pool
