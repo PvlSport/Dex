@@ -26,12 +26,12 @@ contract DEX {
     /**
      * @notice Emitted when ethToToken() swap transacted
      */
-    event EthToTokenSwap();
+    event EthToTokenSwap(address swaper, uint256 amountEth, uint256 amountToken);
 
     /**
      * @notice Emitted when tokenToEth() swap transacted
      */
-    event TokenToEthSwap();
+    event TokenToEthSwap(address swaper, uint256 amountToken, uint256 amountEth);
 
     /**
      * @notice Emitted when liquidity provided to DEX and mints LPTs.
@@ -96,6 +96,7 @@ contract DEX {
         uint256 amountTokenOutput = price(msg.value, address(this).balance.sub(msg.value), token.balanceOf(address(this)));//was reviewed ... because address(this).balance allready contain the message value !
         console.log("amountTokenOUtput : ",amountTokenOutput );
         require (token.transfer(msg.sender, amountTokenOutput), "tokens transfer Fail ");
+        emit EthToTokenSwap(msg.sender, msg.value, amountTokenOutput);
         return amountTokenOutput;
     }
 
@@ -104,12 +105,13 @@ contract DEX {
      */
     function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {
         require (token.allowance(msg.sender, address(this)) >= tokenInput, "Please aprouve the the contract");
-        uint256 amountEthOUput = price(tokenInput, token.balanceOf(address(this)), address(this).balance);
-        console.log("amountTokenOUtput : ",amountEthOUput );
-        require (token.transferFrom(msg.sender, address(this), amountEthOUput), "Token transfer fail");
-        (bool sucess, ) = payable(msg.sender).call{value : amountEthOUput}("");
+        uint256 amoutEthOutput = price(tokenInput, token.balanceOf(address(this)), address(this).balance);
+        console.log("amountTokenOUtput : ",amoutEthOutput );
+        require (token.transferFrom(msg.sender, address(this), amoutEthOutput), "Token transfer fail");
+        (bool sucess, ) = payable(msg.sender).call{value : amoutEthOutput}("");
         require (sucess, "eth transfer fail");
-        return amountEthOUput;
+        emit TokenToEthSwap(msg.sender, tokenInput, amoutEthOutput);
+        return amoutEthOutput;
     }
 
     /**

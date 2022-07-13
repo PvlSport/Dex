@@ -509,7 +509,6 @@ function App(props) {
         
         <Switch>
           <Route exact path="/">
-             {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
           {readContracts && readContracts.DEX && address && localProvider ? (
             <Dex
               tx={tx}
@@ -524,9 +523,13 @@ function App(props) {
               price={price}
             />
           ) : (
-            ""
+            "Please deploy the contract"
           )}
-          {/* TODO: The DEX.jsx file actually logs a bunch of the results so we think that instead of creating completely new event components (or whatever), we would figure out how to work with the txs that are happening as a result of EthersJS calling the respective functions in DEX.jsx. 😵 Lines 321-335 are an example of attempting to place emitted events on the front-page UI. It is not working though for now! */}
+          {/* TODO: The DEX.jsx file actually logs a bunch of the results so we think that instead of creating 
+          completely new event components (or whatever), we would figure out how to work with the txs that are happening
+           as a result of EthersJS calling the respective functions in DEX.jsx. 😵 
+           Lines 321-335 are an example of attempting to place emitted events on the front-page UI. 
+           It is not working though for now! */}
           {/* <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
             <div>👀 DEX Events:</div>
             <List
@@ -589,7 +592,7 @@ function App(props) {
             startBlock={1}
           />
 
-          <Events
+          {/* <Events
             contracts={readContracts}
             contractName="DEX"
             eventName="LiquidityProvided"
@@ -605,7 +608,7 @@ function App(props) {
             localProvider={localProvider}
             mainnetProvider={mainnetProvider}
             startBlock={1}
-          />
+          /> */}
         
              
           </Route>

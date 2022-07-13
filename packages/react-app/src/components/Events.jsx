@@ -1,6 +1,6 @@
 import { List } from "antd";
 import { useEventListener } from "eth-hooks/events/useEventListener";
-import { Address } from "../components";
+import { Address, TokenBalance } from "../components";
 
 /*
   ~ What it does? ~
@@ -22,18 +22,34 @@ import { Address } from "../components";
 export default function Events({ contracts, contractName, eventName, localProvider, mainnetProvider, startBlock }) {
   // 📟 Listen for broadcast events
   const events = useEventListener(contracts, contractName, eventName, localProvider, startBlock);
+  console.log("events : ",events );
 
   return (
     <div style={{ width: 600, margin: "auto", marginTop: 32, paddingBottom: 32 }}>
-      <h2>Events:</h2>
+      <h2> {eventName} Events:</h2>
       <List
         bordered
+        
         dataSource={events}
         renderItem={item => {
           return (
-            <List.Item key={item.blockNumber + "_" + item.args.sender + "_" + item.args.purpose}>
+            <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
               <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
-              {item.args[1]}
+              Swap
+              {eventName.indexOf("E") == 0 ? (
+               <span>
+                <TokenBalance balance={item.args[1]} provider={localProvider} />  Eth 
+                <TokenBalance balance={item.args[2]} provider={localProvider} /> Realcees 
+                </span>
+                
+              ) : (
+                <span>
+                <TokenBalance balance={item.args[1]} provider={localProvider} /> Realcees 
+                <TokenBalance balance={item.args[2]} provider={localProvider} />  Eth 
+                </span>
+              )}
+              
+  
             </List.Item>
           );
         }}

@@ -155,6 +155,7 @@ export default function Curve(props) {
         let amountGained = Math.round((10000 * (props.addingToken * props.ethReserve)) / newTokenReserve) / 10000;
         //console.log("amountGained",amountGained)
         ctx.fillStyle = "#000000";
+        
         ctx.fillText(
           "" + amountGained + " ETH output (-0.3% fee)",
           plotX(k / newTokenReserve) + textSize,
