@@ -36,12 +36,12 @@ contract DEX {
     /**
      * @notice Emitted when liquidity provided to DEX and mints LPTs.
      */
-    event LiquidityProvided();
+    event LiquidityProvided(address sender, uint256 amountDeposed);
 
     /**
      * @notice Emitted when liquidity removed from DEX and decreases LPT count within DEX.
      */
-    event LiquidityRemoved();
+    event LiquidityRemoved(address remover, uint256 amountRemoved);
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -104,10 +104,11 @@ contract DEX {
      * @notice sends $BAL tokens to DEX in exchange for Ether
      */
     function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {
-        require (token.allowance(msg.sender, address(this)) >= tokenInput, "Please aprouve the the contract");
+        uint256 allowance = token.allowance(msg.sender, address(this));
+        require (allowance >= tokenInput, "Please aprouve the the contract");
         uint256 amoutEthOutput = price(tokenInput, token.balanceOf(address(this)), address(this).balance);
         console.log("amountTokenOUtput : ",amoutEthOutput );
-        require (token.transferFrom(msg.sender, address(this), amoutEthOutput), "Token transfer fail");
+        require (token.transferFrom(msg.sender, address(this), tokenInput), "Token transfer fail");
         (bool sucess, ) = payable(msg.sender).call{value : amoutEthOutput}("");
         require (sucess, "eth transfer fail");
         emit TokenToEthSwap(msg.sender, tokenInput, amoutEthOutput);
@@ -116,11 +117,24 @@ contract DEX {
 
     /**
      * @notice allows deposits of $BAL and $ETH to liquidity pool
-     * NOTE: parameter is the msg.value sent with this function call. That amount is used to determine the amount of $BAL needed as well and taken from the depositor.
-     * NOTE: user has to make sure to give DEX approval to spend their tokens on their behalf by calling approve function prior to this function call.
+     * NOTE: parameter is the msg.value sent with this function call. That amount is used to determine the amount of $BAL needed
+      as well and taken from the depositor.
+     * NOTE: user has to make sure to give DEX approval to spend their tokens on their behalf by calling approve function prior 
+     to this function call.
      * NOTE: Equal parts of both assets will be removed from the user's wallet with respect to the price outlined by the AMM.
      */
-    function deposit() public payable returns (uint256 tokensDeposited) {}
+    function deposit() public payable returns (uint256 tokensDeposited) {
+        uint256 ratio = address(this).balance / token.balanceOf(address(this)); 
+        console.log("ratio : ", ratio);
+        tokensDeposited = msg.value.mul(ratio);
+        console.log("tokensDeposited : ", tokensDeposited);
+        uint256 allowance = token.allowance(msg.sender, address(this));
+        require (allowance >= tokensDeposited, "Please aprouve the the contract");
+        totalLiquidity = totalLiquidity.add(msg.value);
+        liquidity[msg.sender] = liquidity[msg.sender].add(msg.value);
+        emit LiquidityProvided(msg.sender, msg.value);
+        return tokensDeposited;
+    }
 
     /**
      * @notice allows withdrawal of $BAL and $ETH from liquidity pool
