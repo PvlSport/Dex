@@ -29,29 +29,40 @@ export default function Events({ contracts, contractName, eventName, localProvid
       <h2> {eventName} Events:</h2>
       <List
         bordered
-        
         dataSource={events}
         renderItem={item => {
-          return (
-            <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
-              <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
-              Swap
-              {eventName.indexOf("E") == 0 ? (
-               <span>
-                <TokenBalance balance={item.args[1]} provider={localProvider} />  Eth 
-                <TokenBalance balance={item.args[2]} provider={localProvider} /> Realcees 
-                </span>
-                
-              ) : (
-                <span>
-                <TokenBalance balance={item.args[1]} provider={localProvider} /> Realcees 
-                <TokenBalance balance={item.args[2]} provider={localProvider} />  Eth 
-                </span>
-              )}
-              
-  
-            </List.Item>
-          );
+          if (eventName.includes("Swap")) {
+              return (
+                <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
+                  <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
+                  Swap
+                  {eventName.indexOf("E") == 0 ? (
+                  <span>
+                    <TokenBalance balance={item.args[1]} provider={localProvider} /> Eth 
+                    <TokenBalance balance={item.args[2]} provider={localProvider} /> Rlcs 
+                    </span>
+                    
+                  ) : (
+                    <span>
+                    <TokenBalance balance={item.args[1]} provider={localProvider} /> Rlcs 
+                    <TokenBalance balance={item.args[2]} provider={localProvider} /> Eth 
+                    </span>
+                  )}
+                </List.Item>
+              );} 
+              else {
+                return (
+                  <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
+                    <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
+                    {eventName.includes("Provided") ? ( <span>Provided</span> ) : ( <span>Removed</span> )}
+                      <span>
+                      <TokenBalance balance={item.args[1]} provider={localProvider} /> liquidity 
+                      <TokenBalance balance={item.args[2]} provider={localProvider} /> Eth 
+                      <TokenBalance balance={item.args[3]} provider={localProvider} /> Rlcs 
+                      </span>
+
+                  </List.Item>
+                );}   
         }}
       />
     </div>

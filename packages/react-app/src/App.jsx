@@ -592,7 +592,7 @@ function App(props) {
             startBlock={1}
           />
 
-          {/* <Events
+          <Events
             contracts={readContracts}
             contractName="DEX"
             eventName="LiquidityProvided"
@@ -608,7 +608,7 @@ function App(props) {
             localProvider={localProvider}
             mainnetProvider={mainnetProvider}
             startBlock={1}
-          /> */}
+          />
         
              
           </Route>
