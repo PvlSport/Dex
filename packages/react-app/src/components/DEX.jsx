@@ -135,36 +135,27 @@ export default function Dex(props) {
 
   return (
     <Row span={24}>
-      <Col span={12}>
+      <Col span={8}>
         <Card
           title={
             <div>
               <Address value={contractAddress} />
-              <div style={{ float: "right", fontSize: 24 }}>
-                {parseFloat(ethers.utils.formatEther(contractBalance)).toFixed(4)} ⚖️
-                <TokenBalance name={tokenName} img={"🤘"} address={contractAddress} contracts={props.readContracts} />
-              </div>
+              
             </div>
           }
-          size="large"
+          size="small"
           loading={false}
         >
           {display}
+          <div style={{ fontSize: 24 }}>
+                {parseFloat(ethers.utils.formatEther(contractBalance)).toFixed(4)} ⚖️
+                <TokenBalance name={tokenName} img={"🤘"} address={contractAddress} contracts={props.readContracts} />
+              </div>
         </Card>
-        <Row span={12}>
-          <Contract
-            name="Realcees"
-            signer={props.signer}
-            provider={props.localProvider}
-            show={["balanceOf", "approve"]}
-            address={props.address}
-            blockExplorer={props.blockExplorer}
-            contractConfig={props.contractConfig}
-          />
-        </Row>
       </Col>
-      <Col span={12}>
-        <div style={{ padding: 20 }}>
+      <Col span={8}>
+        <div style={{ padding: 20, width:"100%",height:"100%" }}>
+      
           <Curve
             addingEth={values && values["ethToToken"] ? values["ethToToken"] : 0}
             addingToken={values && values["tokenToEth"] ? values["tokenToEth"] : 0}
@@ -175,6 +166,17 @@ export default function Dex(props) {
           />
         </div>
       </Col>
+      <Col span={8}>
+      <Contract
+            name="Realcees"
+            signer={props.signer}
+            provider={props.localProvider}
+            show={["balanceOf", "approve"]}
+            address={props.address}
+            blockExplorer={props.blockExplorer}
+            contractConfig={props.contractConfig}
+          />
+          </Col>
     </Row>
   );
 }
