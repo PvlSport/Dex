@@ -124,17 +124,20 @@ contract DEX {
      * NOTE: Equal parts of both assets will be removed from the user's wallet with respect to the price outlined by the AMM.
      */
     function deposit() public payable returns (uint256 tokensDeposited) {
-        uint256 ratio = address(this).balance / token.balanceOf(address(this)); 
-        console.log("ratio : ", ratio);
-        tokensDeposited = msg.value.mul(ratio);
+        uint256 EthreservesBeforDeposit = address(this).balance.sub(msg.value);
+        tokensDeposited = (msg.value.mul(token.balanceOf(address(this)))) / EthreservesBeforDeposit;
         console.log("tokensDeposited : ", tokensDeposited);
         uint256 allowance = token.allowance(msg.sender, address(this));
         require (allowance >= tokensDeposited, "Please aprouve the the contract");
-        totalLiquidity = totalLiquidity.add(msg.value);
-        liquidity[msg.sender] = liquidity[msg.sender].add(msg.value);
-        emit LiquidityProvided(msg.sender, msg.value);
+        require (token.transferFrom(msg.sender, address(this), tokensDeposited), "Token Transfer Fail");      
+        uint256 liquidityShared = safeMath.sqrt(msg.value.mul(tokensDeposited)); // <= came from uniswap V2 Doc
+        totalLiquidity = totalLiquidity.add(liquidity);
+        liquidity[msg.sender] = liquidity[msg.sender].add(liquidity);
+        emit LiquidityProvided(msg.sender, liquidity);
         return tokensDeposited;
     }
+
+   
 
     /**
      * @notice allows withdrawal of $BAL and $ETH from liquidity pool
