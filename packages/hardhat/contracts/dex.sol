@@ -36,12 +36,12 @@ contract DEX {
     /**
      * @notice Emitted when liquidity provided to DEX and mints LPTs.
      */
-    event LiquidityProvided(address sender, uint256 amountDeposed);
+    event LiquidityProvided(address sender, uint256 liquidityProvided, uint256 ethAdded, uint256 tokensAdded);
 
     /**
      * @notice Emitted when liquidity removed from DEX and decreases LPT count within DEX.
      */
-    event LiquidityRemoved(address remover, uint256 amountRemoved);
+    event LiquidityRemoved(address remover, uint256 liquidityRemoved, uint256 ethRemoved, uint256 tokensRemoved);
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -50,6 +50,20 @@ contract DEX {
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
+
+    /* Added function sqrt from Math.sol */
+    function sqrt(uint y) internal pure returns (uint z) {
+        if (y > 3) {
+            z = y;
+            uint x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
+        }
+    }  
 
     /**
      * @notice initializes amount of tokens that will be transferred to the DEX itself from the erc20 contract mintee (and only them based on how Balloons.sol is written). Loads contract up with both ETH and Balloons.
@@ -62,8 +76,8 @@ contract DEX {
         require (totalLiquidity == 0, "Allready been initialise");
         require (token.allowance(msg.sender, address(this)) >= amountOfTokens, "Please aprouve the amount First");
         require (token.transferFrom(msg.sender, address(this), amountOfTokens), "Token transfer fail");
-        totalLiquidity = amountOfTokens;
-        liquidity[msg.sender] = amountOfTokens;
+        totalLiquidity = sqrt(msg.value.mul(amountOfTokens));
+        liquidity[msg.sender] = totalLiquidity;
         return totalLiquidity; 
     }
 
@@ -130,10 +144,10 @@ contract DEX {
         uint256 allowance = token.allowance(msg.sender, address(this));
         require (allowance >= tokensDeposited, "Please aprouve the the contract");
         require (token.transferFrom(msg.sender, address(this), tokensDeposited), "Token Transfer Fail");      
-        uint256 liquidityShared = safeMath.sqrt(msg.value.mul(tokensDeposited)); // <= came from uniswap V2 Doc
-        totalLiquidity = totalLiquidity.add(liquidity);
-        liquidity[msg.sender] = liquidity[msg.sender].add(liquidity);
-        emit LiquidityProvided(msg.sender, liquidity);
+        uint256 liquidityShared = sqrt(msg.value.mul(tokensDeposited)); // <= came from uniswap V2 Doc
+        totalLiquidity = totalLiquidity.add(liquidityShared);
+        liquidity[msg.sender] = liquidity[msg.sender].add(liquidityShared);
+        emit LiquidityProvided(msg.sender, liquidityShared, msg.value, tokensDeposited );
         return tokensDeposited;
     }
 
@@ -143,5 +157,22 @@ contract DEX {
      * @notice allows withdrawal of $BAL and $ETH from liquidity pool
      * NOTE: with this current code, the msg caller could end up getting very little back if the liquidity is super low in the pool. I guess they could see that with the UI.
      */
-    function withdraw(uint256 amount) public returns (uint256 eth_amount, uint256 token_amount) {}
+    function withdraw(uint256 amount) public returns (uint256 eth_amount, uint256 token_amount) {    
+        require (liquidity[msg.sender] >= amount, "Not provided enough liquidity");
+        console.log("liquidity LP before withdraw: ", liquidity[msg.sender]);
+        eth_amount = amount.mul(address(this).balance) / totalLiquidity;
+        token_amount = amount.mul(token.balanceOf(address(this))) / totalLiquidity;
+        liquidity[msg.sender] = liquidity[msg.sender].sub(amount);
+        console.log("liquidity LP after withdraw: ", liquidity[msg.sender]);
+        console.log("Total liquidity  : ", totalLiquidity);
+        console.log("eth : ", eth_amount);
+        console.log("token : ", token_amount);
+        uint256 liquidityWithdraw = sqrt(eth_amount.mul(token_amount));
+        totalLiquidity = totalLiquidity.sub(liquidityWithdraw);
+        (bool success, ) = payable(msg.sender).call{value: eth_amount}("");
+        require (success, "Eth transfer Fail");
+        require ( token.transfer(msg.sender, token_amount));
+        emit LiquidityRemoved(msg.sender, liquidityWithdraw, eth_amount, token_amount);
+        return (eth_amount, token_amount);       
+    }
 }
