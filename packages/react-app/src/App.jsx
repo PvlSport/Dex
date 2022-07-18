@@ -495,7 +495,7 @@ function App(props) {
           }} 
           to="/Events">Eventlist</Link>
         </Menu.Item>
-          <Menu.Item key="/debug">
+         {/*  <Menu.Item key="/debug">
             <Link
               onClick={() => {
                 setRoute("/debug");
@@ -504,7 +504,7 @@ function App(props) {
             >
               Debug
             </Link>
-          </Menu.Item>
+          </Menu.Item> */}
         </Menu>
         
         <Switch>
@@ -546,7 +546,7 @@ function App(props) {
             />
           </div> */}
           {/* adding slide out debug  */}
-      <Button  style={{position : "fixed", right:"26px", top: 130}} type="primary" onClick={showDrawer}>
+      <Button  style={{position : "fixed", left:"26px", top: 130}} type="primary" onClick={showDrawer}>
           Debug Contracts
       </Button>
       <Drawer
@@ -612,13 +612,13 @@ function App(props) {
         
              
           </Route>
-          <Route exact path="/debug">
+          {/* <Route exact path="/debug">
             {/*
                 🎛 this scaffolding is full of commonly used components
                 this <Contract/> component will automatically parse your ABI
                 and give you a form to interact with it locally
-            */}
-            <div style={{margin: "auto", width:"70vw"}}>{/* added this div to keep 70vh on the /debug page */}
+            
+            <div style={{margin: "auto", width:"70vw"}}>{/* added this div to keep 70vh on the /debug page 
             <Contract
               name="Realcees"
               price={price}
@@ -638,7 +638,7 @@ function App(props) {
               contractConfig={contractConfig}
             />
             </div>
-          </Route>
+          </Route> */}
         </Switch>
       </BrowserRouter>
 

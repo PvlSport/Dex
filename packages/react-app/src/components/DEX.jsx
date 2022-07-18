@@ -32,6 +32,7 @@ export default function Dex(props) {
   const liquidity = useContractReader(props.readContracts, contractName, "totalLiquidity");
   const reserves = useContractReader(props.readContracts, contractName, "getReserves");
 
+
   
 
   //swap front design by CM
@@ -48,6 +49,8 @@ export default function Dex(props) {
   const [swap, toggleSwap] = useState(0);
   const path = ["ETH", "RLCS"];
   const [visibility, setVisibility] = useState(true); 
+  const [loading, setLoading] = useState(false);
+  const [lpValues, setLpValues] = useState();
   const getPrice = async (title, value) => {
     if (value === '') return '';
     let valueBN = ethers.utils.parseEther("" + value);
@@ -55,11 +58,24 @@ export default function Dex(props) {
     let xReserves = title == "ETH" ? reserves[0] : reserves[1]
     let yReserves = title == "RLCS" ? reserves[1] : reserves[0]
     let price = await props.readContracts[contractName].price(valueBN, xReserves, yReserves);
-
     return (ethers.utils.formatEther(price))
   }
 
-  const rowSwapForm = (title, onClick) => {
+  async function checkButtonVisibility (_value) {
+    let allowance = await allowanceCM();
+    let value = 0;
+    if (_value) { value = _value} else {value = values["RLCS"]}
+    console.log("value : ", value)
+    console.log("swap :",swap)
+    if(swap == 0) {setVisibility(true)
+    } else if ( value <= ethers.utils.formatEther(allowance))
+       {console.log("allowance decimal :",ethers.utils.formatEther(allowance))
+        setVisibility(true)
+    } else   setVisibility(false)
+    console.log("visibility : ",visibility)
+  }
+
+  const rowSwapForm = (title) => {
     return (
       <Row>
         <Col span={8} style={{ textAlign: "right", opacity: 0.333, paddingRight: 6, fontSize: 24 }}>
@@ -76,21 +92,9 @@ export default function Dex(props) {
                 console.log("etargeted : ",e.target.value)
                 setValues(newValues);
                 console.log("values", values)
+                await checkButtonVisibility (e.target.value)
               }}
               value={values[title]}
-              //addonAfter={
-                // <div
-                //   type="default"
-                //   onClick={() => {
-                //     onClick(values[title]);
-                //     let newValues = { ...values };
-                //     newValues[title] = "";
-                //     setValues(newValues);
-                //   }}
-                // > test
-            
-                // </div>
-              // }
             />
           </div>
         </Col>
@@ -101,72 +105,76 @@ export default function Dex(props) {
   if (props.readContracts && props.readContracts[contractName]) {
     displaySwap.push(
       <div>
-        {rowSwapForm(path[swap], async value => {
-          let valueInEther = ethers.utils.parseEther("" + value);
-          let swapEthToTokenResult = await tx(writeContracts[contractName]["ethToToken"]({ value: valueInEther }));
-          console.log("swapEthToTokenResult:", swapEthToTokenResult);
-        })}
+        {rowSwapForm(path[swap])}
         <Button
-        onClick={() => {
-          toggleSwap(swap ? 0 : 1) ;
-          console.log("swap : ", swap)
-          console.log("path :", path[swap])
-          console.log("value in tioggle", values)
-        }}
-        >🔃</Button>
-        {rowSwapForm(path[swap ? 0 : 1 ], "🔏", async value => {
-          let valueInEther = ethers.utils.parseEther("" + value);
-          console.log("valueInEther", valueInEther);
-          let allowance = allowanceCM();
-          console.log("allowance", allowance);
-
-          let approveTx;
-          if (allowance.lt(valueInEther)) {
-            approveTx = await tx(
-              writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInEther, {
-                gasLimit: 200000,
-              }),
-            );
-          }
-
-          let swapTx = tx(writeContracts[contractName]["tokenToEth"](valueInEther, { gasLimit: 200000 }));
-          if (approveTx) {
-            console.log("waiting on approve to finish...");
-            let approveTxResult = await approveTx;
-            console.log("approveTxResult:", approveTxResult);
-          }
-          let swapTxResult = await swapTx;
-          console.log("swapTxResult:", swapTxResult);
-        })}
+          onClick={() => {
+            toggleSwap(swap ? 0 : 1) ;
+            setValues({});
+        }}>🔃</Button>
+        {rowSwapForm(path[swap ? 0 : 1 ])}
         <div style={{marginTop: "16px", display:"flex", justifyContent:"space-evenly"}}>
-
         <Button
               type={"primary"}
               margin = {"8px"}
               disabled = {visibility}
-              onClick={() => {
-                // tx(
-                //   writeContracts.YourToken.transfer(tokenSendToAddress, ethers.utils.parseEther("" + tokenSendAmount)),
-                // );
-              }}
-            >
+              loading ={loading}
+              onClick={ async () => {
+              setLoading(true)
+              let valueInEther = ethers.utils.parseEther("" + values["RLCS"]);
+              let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInEther, {
+                gasLimit: 200000,}),);
+                if (approveTx) {
+                      console.log("waiting on approve to finish...");
+                      let approveTxResult = await approveTx;
+                      console.log("approveTxResult:", approveTxResult);
+                    }
+                setLoading(false)
+                checkButtonVisibility();
+                  }}
+                >
               Approve
             </Button>
          <Button
               type={"primary"}
-              onClick={() => {
-                // tx(
-                //   writeContracts.YourToken.transfer(tokenSendToAddress, ethers.utils.parseEther("" + tokenSendAmount)),
-                // );
+              disabled = {!visibility}
+              loading ={loading}
+              onClick={ async () => {
+                setLoading(true)
+                if (swap == 0 ) {
+                let valueInEther = ethers.utils.parseEther("" + values["ETH"]);
+                let swapTx = await tx(writeContracts[contractName]["ethToToken"]({ value: valueInEther }));
+                } else {
+                  let valueInEther = ethers.utils.parseEther("" + values["RLCS"]);
+                  let swapTx = await tx(writeContracts[contractName]["tokenToEth"](valueInEther));
+                }
+                setLoading(false)
+                checkButtonVisibility();
               }}
             >
               Swap
           </Button>
           </div>
-          <div>Allowance : {allowanceCM}</div>
         <Divider> Liquidity ({liquidity ? ethers.utils.formatEther(liquidity) : "none"}):</Divider>
-
-        {rowSwapForm("deposit", "📥", async value => {
+        <Row>
+        <Col span={8} style={{ textAlign: "right", opacity: 0.333, paddingRight: 6, fontSize: 24 }}>
+          Liquidity
+        </Col>
+        <Col span={16}>
+          <div style={{ cursor: "pointer", margin: 2 }}>
+            <Input
+              onChange={async e => {
+                let newLpValues = { ...lpValues };
+                console.log("newLpValues", newLpValues)
+                newLpValues = e.target.value;
+                setLpValues(newLpValues);
+                await checkButtonVisibility (e.target.value)
+              }}
+              value={lpValues}
+            />
+          </div>
+        </Col>
+      </Row>
+        {/* {rowSwapForm("deposit", "📥", async value => {
           let valueInEther = ethers.utils.parseEther("" + value);
           let valuePlusExtra = ethers.utils.parseEther("" + value * 1.03);
           console.log("valuePlusExtra", valuePlusExtra);
@@ -187,7 +195,7 @@ export default function Dex(props) {
 
         {rowSwapForm("withdraw", "📤", async value => {
           
-        })}
+        })} */}
         <div style={{marginTop: "16px", display:"flex", justifyContent:"space-evenly"}}>
         <Button
           type={"primary"}
@@ -237,8 +245,9 @@ export default function Dex(props) {
        
         <div style={{ padding: 20 }}>
           <Curve
-            addingEth={values && values["ETH"] ? values["ETH"] : 0}
-            addingToken={values && values["RLCS"] ? values["RLCS"] : 0}
+
+            addingEth={swap == 0 ? values["ETH"] : 0}
+            addingToken={swap == 1 ? values["RLCS"] : 0}
             ethReserve={ethBalanceFloat}
             tokenReserve={tokenBalanceFloat}
             width={500}
