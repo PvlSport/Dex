@@ -26,12 +26,16 @@ export default function Dex(props) {
   const contractAddress = props.readContracts[contractName].address;
   const tokenAddress = props.readContracts[tokenName].address;
   const contractBalance = useBalance(props.localProvider, contractAddress);
-
   const tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, props.localProvider);
   const tokenBalanceFloat = parseFloat(ethers.utils.formatEther(tokenBalance));
   const ethBalanceFloat = parseFloat(ethers.utils.formatEther(contractBalance));
   const liquidity = useContractReader(props.readContracts, contractName, "totalLiquidity");
-
+ 
+//   useEffect( () => {
+//     tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, props.localProvider);
+//     tokenBalanceFloat = parseFloat(ethers.utils.formatEther(tokenBalance));
+//     ethBalanceFloat = parseFloat(ethers.utils.formatEther(contractBalance));
+// },[]);
 
  
 
@@ -52,8 +56,11 @@ export default function Dex(props) {
   const [swap, toggleSwap] = useState(0);
   const path = ["ETH", "RLCS"];
   const [visibility, setVisibility] = useState(true); 
+  const [lpVisibility, setLpVisibility] = useState(true)
   const [loading, setLoading] = useState(false);
   const [lpValues, setLpValues] = useState();
+  const [lpLoading, setLpLoading] = useState();
+
   const getPrice = async (title, value) => {
     if (value === '') return '';
     let reserves = await props.readContracts[contractName].getReserves();
@@ -63,6 +70,12 @@ export default function Dex(props) {
     let yReserves = title == "RLCS" ? reserves[0] : reserves[1]
     let price = await props.readContracts[contractName].price(valueBN, xReserves, yReserves);
     return (ethers.utils.formatEther(price))
+  }
+  async function checkLpButtonVisibility (_value) {
+    let allowance = await allowanceCM();
+    if ( _value <= ethers.utils.formatEther(allowance)) {
+      setLpVisibility(true)
+    } else {setLpVisibility(false)}
   }
 
   async function checkButtonVisibility (_value) {
@@ -152,6 +165,7 @@ export default function Dex(props) {
                   let swapTx = await tx(writeContracts[contractName]["tokenToEth"](valueInEther));
                 }
                 setLoading(false)
+                setValues({});
                 checkButtonVisibility();
               }}
             >
@@ -171,51 +185,60 @@ export default function Dex(props) {
                 console.log("newLpValues", newLpValues)
                 newLpValues = e.target.value;
                 setLpValues(newLpValues);
-                await checkButtonVisibility (e.target.value)
+                await checkLpButtonVisibility (e.target.value)
               }}
               value={lpValues}
             />
           </div>
         </Col>
       </Row>
-        {/* {rowSwapForm("deposit", "📥", async value => {
-          let valueInEther = ethers.utils.parseEther("" + value);
-          let valuePlusExtra = ethers.utils.parseEther("" + value * 1.03);
-          console.log("valuePlusExtra", valuePlusExtra);
-          let allowance = await props.readContracts[tokenName].allowance(
-            props.address,
-            props.readContracts[contractName].address,
-          );
-          console.log("allowance", allowance);
-          if (allowance.lt(valuePlusExtra)) {
-            await tx(
-              writeContracts[tokenName].approve(props.readContracts[contractName].address, valuePlusExtra, {
-                gasLimit: 200000,
-              }),
-            );
-          }
-          await tx(writeContracts[contractName]["deposit"]({ value: valueInEther, gasLimit: 200000 }));
-        })}
-
-        {rowSwapForm("withdraw", "📤", async value => {
-          
-        })} */}
+       
         <div style={{marginTop: "16px", display:"flex", justifyContent:"space-evenly"}}>
         <Button
+              type={"primary"}
+              margin = {"8px"}
+              disabled = {lpVisibility}
+              loading ={lpLoading}
+              onClick={ async () => {
+              setLpLoading(true)
+              //tokensDeposited = (msg.value.mul(token.balanceOf(address(this)))) / EthreservesBeforDeposit;
+              let valueInToken= ethers.utils.parseEther("" + lpValues) * tokenBalance / contractBalance ; //This Value should be calculated ... 
+              let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
+                gasLimit: 200000,}),);
+                if (approveTx) {
+                      console.log("waiting on approve to finish...");
+                      let approveTxResult = await approveTx;
+                      console.log("approveTxResult:", approveTxResult);
+                    }
+                setLpLoading(false)
+                checkLpButtonVisibility(lpValues);
+                  }}
+                >
+              Approve
+            </Button>
+        <Button
           type={"primary"}
-          onClick={() => {
-              // tx(
-              //   writeContracts.YourToken.transfer(tokenSendToAddress, ethers.utils.parseEther("" + tokenSendAmount)),
-              // );
+          disabled = {!lpVisibility}
+          loading ={lpLoading}
+          onClick={async () => {
+            setLpLoading(true);
+            let valueInEther = ethers.utils.parseEther("" + lpValues);
+            await tx(writeContracts[contractName]["deposit"]({ value: valueInEther, gasLimit: 200000 }));
+            setLpValues('');
+            setLpLoading(false);
             }}>
              Deposit
         </Button>
         <Button
           type={"primary"}
-          onClick={async (value) => {
-            let valueInEther = ethers.utils.parseEther("" + value);
+          
+          onClick={async () => {
+            setLpLoading(true);
+            let valueInEther = ethers.utils.parseEther("" + lpValues);
             let withdrawTxResult = await tx(writeContracts[contractName]["withdraw"](valueInEther));
             console.log("withdrawTxResult:", withdrawTxResult);
+            setLpValues('');
+            setLpLoading(false);
             }}>
              Withdraw
         </Button>
