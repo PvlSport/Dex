@@ -9,6 +9,7 @@ import Contract from "./Contract";
 import Curve from "./Curve";
 import TokenBalance from "./TokenBalance";
 import Blockies from "react-blockies";
+import { useEffect } from "react";
 
 const contractName = "DEX";
 const tokenName = "Realcees";
@@ -30,7 +31,9 @@ export default function Dex(props) {
   const tokenBalanceFloat = parseFloat(ethers.utils.formatEther(tokenBalance));
   const ethBalanceFloat = parseFloat(ethers.utils.formatEther(contractBalance));
   const liquidity = useContractReader(props.readContracts, contractName, "totalLiquidity");
-  const reserves = useContractReader(props.readContracts, contractName, "getReserves");
+
+
+ 
 
 
   
@@ -53,10 +56,11 @@ export default function Dex(props) {
   const [lpValues, setLpValues] = useState();
   const getPrice = async (title, value) => {
     if (value === '') return '';
+    let reserves = await props.readContracts[contractName].getReserves();
     let valueBN = ethers.utils.parseEther("" + value);
     console.log(reserves)
     let xReserves = title == "ETH" ? reserves[0] : reserves[1]
-    let yReserves = title == "RLCS" ? reserves[1] : reserves[0]
+    let yReserves = title == "RLCS" ? reserves[0] : reserves[1]
     let price = await props.readContracts[contractName].price(valueBN, xReserves, yReserves);
     return (ethers.utils.formatEther(price))
   }
