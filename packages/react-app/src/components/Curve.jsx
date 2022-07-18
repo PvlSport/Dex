@@ -114,7 +114,7 @@ export default function Curve(props) {
         let amountGained = Math.round((10000 * (props.addingEth * props.tokenReserve)) / newEthReserve) / 10000;
         ctx.fillStyle = "#000000";
         ctx.fillText(
-          "" + amountGained + " 🎈 output (-0.3% fee)",
+          "" + amountGained + " 🤘 output (-0.3% fee)",
           plotX(newEthReserve) + textSize,
           plotY(k / newEthReserve),
         );
@@ -138,7 +138,7 @@ export default function Curve(props) {
 
         ctx.fillStyle = "#000000";
         ctx.fillText(
-          "" + props.addingToken + " 🎈 input",
+          "" + props.addingToken + " 🤘 input",
           plotX(props.ethReserve) + textSize,
           plotY(props.tokenReserve),
         );

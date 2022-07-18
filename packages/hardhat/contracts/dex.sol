@@ -81,6 +81,11 @@ contract DEX {
         return totalLiquidity; 
     }
 
+    //geting reserves for price calculation
+    function getReserves () public view returns (uint256 ethReserves, uint256 tokenReserves) {
+        return (address(this).balance, token.balanceOf(address(this)));
+    }
+
     /**
      * @notice returns yOutput, or yDelta for xInput (or xDelta)
      * @dev Follow along with the [original tutorial](https://medium.com/@austin_48503/%EF%B8%8F-minimum-viable-exchange-d84f30bd0c90) Price section for an understanding of the DEX's pricing model and for a price function to add to your contract. You may need to update the Solidity syntax (e.g. use + instead of .add, * instead of .mul, etc). Deploy when you are done.
