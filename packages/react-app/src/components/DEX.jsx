@@ -143,7 +143,7 @@ export default function Dex(props) {
               loading ={loading}
               onClick={ async () => {
               setLoading(true)
-              let valueInEther = ethers.utils.parseEther("" + values["RLCS"] * 1.05 );
+              let valueInEther = ethers.utils.parseEther(values["RLCS"].toString() );
               await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInEther, {
                 gasLimit: 200000,}),);
                 setLoading(false)
@@ -159,7 +159,7 @@ export default function Dex(props) {
               onClick={ async () => {
                 setLoading(true)
                 if (swap == 0 ) {
-                let valueInEther = ethers.utils.parseEther("" + values["ETH"]);
+                let valueInEther = ethers.utils.parseEther(values["ETH"].toString());
                 await tx(writeContracts[contractName]["ethToToken"]({ value: valueInEther }));
                 } else {
                   let valueInEther = ethers.utils.parseEther("" + values["RLCS"]);
@@ -221,7 +221,7 @@ export default function Dex(props) {
               loading ={lpLoading}
               onClick={ async () => {
               setLpLoading(true)
-              let valueInToken= ethers.utils.parseEther("" + lpTokenValues * 1.05 ) ; // calculated value... 
+              let valueInToken= ethers.utils.parseEther(lpTokenValues.toString()) ; // calculated value... 
               console.log("valueInToken : ",valueInToken)
               await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
                 gasLimit: 200000,}),);
@@ -237,7 +237,7 @@ export default function Dex(props) {
           loading ={lpLoading}
           onClick={async () => {
             setLpLoading(true);
-            let valueInEther = ethers.utils.parseEther("" + lpValues);
+            let valueInEther = ethers.utils.parseEther(lpValues.toString());
             await tx(writeContracts[contractName]["deposit"]({ value: valueInEther, gasLimit: 200000 }));
             setLpValues('');
             setLpTokenValues('');
@@ -271,7 +271,7 @@ export default function Dex(props) {
           loading ={lpLoading}
           onClick={async () => {
             setLpLoading(true);
-            let valueInEther = ethers.utils.parseEther("" + withdrawLpValues);
+            let valueInEther = ethers.utils.parseEther(withdrawLpValues.toString());
             let withdrawTxResult = await tx(writeContracts[contractName]["withdraw"](valueInEther));
             console.log("withdrawTxResult:", withdrawTxResult);
             setWithdrawLpValues('');
