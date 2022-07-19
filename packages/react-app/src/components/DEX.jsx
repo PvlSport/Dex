@@ -142,14 +142,9 @@ export default function Dex(props) {
               loading ={loading}
               onClick={ async () => {
               setLoading(true)
-              let valueInEther = ethers.utils.parseEther("" + values["RLCS"]);
+              let valueInEther = ethers.utils.parseEther("" + values["RLCS"] * 1.05 );
               let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInEther, {
                 gasLimit: 200000,}),);
-                if (approveTx) {
-                      console.log("waiting on approve to finish...");
-                      let approveTxResult = await approveTx;
-                      console.log("approveTxResult:", approveTxResult);
-                    }
                 setLoading(false)
                 checkButtonVisibility();
                   }}
@@ -225,17 +220,12 @@ export default function Dex(props) {
               loading ={lpLoading}
               onClick={ async () => {
               setLpLoading(true)
-              let valueInToken= ethers.utils.parseEther("" + lpTokenValues); // calculated value... 
+              let valueInToken= ethers.utils.parseEther("" + lpTokenValues * 1.05 ) ; // calculated value... 
               console.log("valueInToken : ",valueInToken)
               let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
                 gasLimit: 200000,}),);
-                if (approveTx) {
-                      console.log("waiting on approve to finish...");
-                      let approveTxResult = await approveTx;
-                      console.log("approveTxResult:", approveTxResult);
-                    }
-                setLpLoading(false)
-                checkLpButtonVisibility(lpTokenValues);
+              setLpLoading(false)
+              checkLpButtonVisibility(lpTokenValues);
                   }}
                 >
               Approve
