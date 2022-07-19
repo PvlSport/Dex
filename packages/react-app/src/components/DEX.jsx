@@ -96,7 +96,7 @@ export default function Dex(props) {
     console.log("visibility : ",visibility)
   }
 
-  const rowSwapForm = (title, icon) => {
+  const rowSwapForm = (title, icon, disable) => {
     return (
       <Row>
         <Col span={8} style={{ textAlign: "right", opacity: 0.333, paddingRight: 6, fontSize: 24 }}>
@@ -105,6 +105,7 @@ export default function Dex(props) {
         <Col span={16}>
           <div style={{ cursor: "pointer", margin: 2 }}>
             <Input
+              disabled={disable}
               addonAfter={icon}
               onChange={async e => {
                 let newValues = { ...values };
@@ -127,13 +128,13 @@ export default function Dex(props) {
   if (props.readContracts && props.readContracts[contractName]) {
     displaySwap.push(
       <div>
-        {rowSwapForm(path[swap],icon[swap])}
+        {rowSwapForm(path[swap],icon[swap], false)}
         <Button
           onClick={() => {
             toggleSwap(swap ? 0 : 1) ;
             setValues({});
         }}>🔃</Button>
-        {rowSwapForm(path[swap ? 0 : 1 ],icon[swap ? 0 : 1])}
+        {rowSwapForm(path[swap ? 0 : 1 ],icon[swap ? 0 : 1], true)}
         <div style={{marginTop: "16px", display:"flex", justifyContent:"space-evenly"}}>
         <Button
               type={"primary"}
