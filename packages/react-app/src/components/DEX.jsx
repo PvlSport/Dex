@@ -144,7 +144,7 @@ export default function Dex(props) {
               onClick={ async () => {
               setLoading(true)
               let valueInEther = ethers.utils.parseEther("" + values["RLCS"] * 1.05 );
-              let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInEther, {
+              await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInEther, {
                 gasLimit: 200000,}),);
                 setLoading(false)
                 checkButtonVisibility();
@@ -160,10 +160,10 @@ export default function Dex(props) {
                 setLoading(true)
                 if (swap == 0 ) {
                 let valueInEther = ethers.utils.parseEther("" + values["ETH"]);
-                let swapTx = await tx(writeContracts[contractName]["ethToToken"]({ value: valueInEther }));
+                await tx(writeContracts[contractName]["ethToToken"]({ value: valueInEther }));
                 } else {
                   let valueInEther = ethers.utils.parseEther("" + values["RLCS"]);
-                  let swapTx = await tx(writeContracts[contractName]["tokenToEth"](valueInEther));
+                  await tx(writeContracts[contractName]["tokenToEth"](valueInEther));
                 }
                 setLoading(false)
                 setValues({});
@@ -223,7 +223,7 @@ export default function Dex(props) {
               setLpLoading(true)
               let valueInToken= ethers.utils.parseEther("" + lpTokenValues * 1.05 ) ; // calculated value... 
               console.log("valueInToken : ",valueInToken)
-              let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
+              await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
                 gasLimit: 200000,}),);
               setLpLoading(false)
               checkLpButtonVisibility(lpTokenValues);
