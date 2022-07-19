@@ -27,11 +27,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
   
   const dex = await ethers.getContract("DEX", deployer);
-  await realcees.approve(dex.address, ethers.utils.parseEther("5"));
-  await realcees.transfer("0xEAAC25154a1D9c5d1bE03e95096A7D8aDBf505a2", ethers.utils.parseEther("5"));
+  await realcees.approve(dex.address, ethers.utils.parseEther("0.2"));
+  await realcees.transfer("0xB810b728E44df56eAf4Da93DDd08168B3660753f", ethers.utils.parseEther("5"));
 
-  await dex.init(ethers.utils.parseEther("5"), {
-    value: ethers.utils.parseEther("5"),
+  await dex.init(ethers.utils.parseEther("0.2"), {
+    value: ethers.utils.parseEther("0.2"),
     gasLimit: 200000,
   });
 
