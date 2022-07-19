@@ -56,6 +56,7 @@ export default function Dex(props) {
 
   const [swap, toggleSwap] = useState(0);
   const path = ["ETH", "RLCS"];
+  const icon = ["Ξ", "🤘"]
   const [visibility, setVisibility] = useState(true); 
   const [lpVisibility, setLpVisibility] = useState(true)
   const [loading, setLoading] = useState(false);
@@ -95,7 +96,7 @@ export default function Dex(props) {
     console.log("visibility : ",visibility)
   }
 
-  const rowSwapForm = (title) => {
+  const rowSwapForm = (title, icon) => {
     return (
       <Row>
         <Col span={8} style={{ textAlign: "right", opacity: 0.333, paddingRight: 6, fontSize: 24 }}>
@@ -104,6 +105,7 @@ export default function Dex(props) {
         <Col span={16}>
           <div style={{ cursor: "pointer", margin: 2 }}>
             <Input
+              addonAfter={icon}
               onChange={async e => {
                 let newValues = { ...values };
                 console.log("newValues", newValues)
@@ -125,13 +127,13 @@ export default function Dex(props) {
   if (props.readContracts && props.readContracts[contractName]) {
     displaySwap.push(
       <div>
-        {rowSwapForm(path[swap])}
+        {rowSwapForm(path[swap],icon[swap])}
         <Button
           onClick={() => {
             toggleSwap(swap ? 0 : 1) ;
             setValues({});
         }}>🔃</Button>
-        {rowSwapForm(path[swap ? 0 : 1 ])}
+        {rowSwapForm(path[swap ? 0 : 1 ],icon[swap ? 0 : 1])}
         <div style={{marginTop: "16px", display:"flex", justifyContent:"space-evenly"}}>
         <Button
               type={"primary"}
