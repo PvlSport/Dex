@@ -1,5 +1,10 @@
 # 🏗 scaffold-eth | 🏰 BuidlGuidl
 
+
+TODO : - Set to 4 decimals liquidity
+       - Update reserves when swapig so the curve is udate
+       - Tests
+
 Trying to do it from "scratch" at least from challenge 3 :p
 
 ## 🚩 **Challenge 4: Minimum Viable Exchange**
