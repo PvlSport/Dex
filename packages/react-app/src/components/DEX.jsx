@@ -26,17 +26,18 @@ export default function Dex(props) {
   const contractAddress = props.readContracts[contractName].address;
   const tokenAddress = props.readContracts[tokenName].address;
   const contractBalance = useBalance(props.localProvider, contractAddress);
-  const tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, props.localProvider);
-  const tokenBalanceFloat = parseFloat(ethers.utils.formatEther(tokenBalance));
-  const ethBalanceFloat = parseFloat(ethers.utils.formatEther(contractBalance));
+  const tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, 120); //replaced props.localProvider by 120 (120 sec ??)
   const liquidity = useContractReader(props.readContracts, contractName, "totalLiquidity");
- 
-//   useEffect( () => {
-//     tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, props.localProvider);
-//     tokenBalanceFloat = parseFloat(ethers.utils.formatEther(tokenBalance));
-//     ethBalanceFloat = parseFloat(ethers.utils.formatEther(contractBalance));
-// },[]);
 
+  //fixing tokanBlance "issue : "
+  const [tokenBalanceFloat, setTokenbalanceFloat] = useState();
+  const [ethBalanceFloat, setEthBalanceFloat] = useState();;
+  useEffect ( async () => {
+    if (props.readContracts && props.readContracts[tokenName] && props.localProvider){
+    let newTokenBalance = await props.readContracts[tokenName].balanceOf(contractAddress);
+    setTokenbalanceFloat(parseFloat(ethers.utils.formatEther(newTokenBalance.toString())));
+    setEthBalanceFloat(parseFloat(ethers.utils.formatEther(contractBalance)));}
+  },[contractBalance]);
  
 
 
@@ -59,6 +60,8 @@ export default function Dex(props) {
   const [lpVisibility, setLpVisibility] = useState(true)
   const [loading, setLoading] = useState(false);
   const [lpValues, setLpValues] = useState();
+  const [lpTokenValues, setLpTokenValues] = useState();
+  const [withdrawLpValues, setWithdrawLpValues] = useState();
   const [lpLoading, setLpLoading] = useState();
 
   const getPrice = async (title, value) => {
@@ -172,27 +175,46 @@ export default function Dex(props) {
               Swap
           </Button>
           </div>
-        <Divider> Liquidity ({liquidity ? ethers.utils.formatEther(liquidity) : "none"}):</Divider>
+        <Divider> Liquidity ({liquidity ? parseFloat(ethers.utils.formatEther(liquidity)).toFixed(4) : "none"}):</Divider>
         <Row>
         <Col span={8} style={{ textAlign: "right", opacity: 0.333, paddingRight: 6, fontSize: 24 }}>
-          Liquidity
+          Add Liquidity
         </Col>
-        <Col span={16}>
+        <Col span={8}>
           <div style={{ cursor: "pointer", margin: 2 }}>
             <Input
+              addonAfter="ETH"
               onChange={async e => {
                 let newLpValues = { ...lpValues };
                 console.log("newLpValues", newLpValues)
                 newLpValues = e.target.value;
+                let newLpTokenValues = e.target.value * tokenBalance / contractBalance;
                 setLpValues(newLpValues);
-                await checkLpButtonVisibility (e.target.value)
+                setLpTokenValues(newLpTokenValues);
+                await checkLpButtonVisibility (newLpTokenValues)
               }}
               value={lpValues}
             />
           </div>
         </Col>
+        <Col span={8}>
+          <div style={{ cursor: "pointer", margin: 2 }}>
+            <Input
+              addonAfter="RLCS"
+              onChange={async e => {
+                let newLpTokenValues = { ...lpTokenValues };
+                console.log("newLpTokenValues", newLpTokenValues)
+                newLpTokenValues = e.target.value;
+                let newLpValues = e.target.value * contractBalance / tokenBalance;
+                setLpTokenValues(newLpTokenValues);
+                setLpValues(newLpValues);
+                await checkLpButtonVisibility (newLpTokenValues)
+              }}
+              value={lpTokenValues}
+            />
+          </div>
+        </Col>
       </Row>
-       
         <div style={{marginTop: "16px", display:"flex", justifyContent:"space-evenly"}}>
         <Button
               type={"primary"}
@@ -201,8 +223,8 @@ export default function Dex(props) {
               loading ={lpLoading}
               onClick={ async () => {
               setLpLoading(true)
-              //tokensDeposited = (msg.value.mul(token.balanceOf(address(this)))) / EthreservesBeforDeposit;
-              let valueInToken= ethers.utils.parseEther("" + lpValues) * tokenBalance / contractBalance ; //This Value should be calculated ... 
+              let valueInToken= ethers.utils.parseEther("" + lpTokenValues); // calculated value... 
+              console.log("valueInToken : ",valueInToken)
               let approveTx = await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
                 gasLimit: 200000,}),);
                 if (approveTx) {
@@ -211,7 +233,7 @@ export default function Dex(props) {
                       console.log("approveTxResult:", approveTxResult);
                     }
                 setLpLoading(false)
-                checkLpButtonVisibility(lpValues);
+                checkLpButtonVisibility(lpTokenValues);
                   }}
                 >
               Approve
@@ -225,24 +247,46 @@ export default function Dex(props) {
             let valueInEther = ethers.utils.parseEther("" + lpValues);
             await tx(writeContracts[contractName]["deposit"]({ value: valueInEther, gasLimit: 200000 }));
             setLpValues('');
+            setLpTokenValues('');
             setLpLoading(false);
             }}>
              Deposit
         </Button>
-        <Button
+        </div>
+        
+        <Row style={{marginTop: "16px"}}>
+        <Col span={8} style={{ textAlign: "right", opacity: 0.333, paddingRight: 6, fontSize: 24 }}>
+          Remove Liquidity
+        </Col>
+        
+        <Col span={16}>
+        <Input
+              addonAfter="Lp"
+              onChange={async e => {
+                let newWithdrawLpTokenValues = { ...withdrawLpValues };
+                console.log("newWithDrawLpTokenValues", newWithdrawLpTokenValues)
+                newWithdrawLpTokenValues = e.target.value;
+                setWithdrawLpValues(newWithdrawLpTokenValues);
+              }}
+              value={withdrawLpValues}
+            />
+        </Col>
+        </Row>
+        <Button 
+          style={{marginTop: "16px"}}
           type={"primary"}
-          
+          loading ={lpLoading}
           onClick={async () => {
             setLpLoading(true);
-            let valueInEther = ethers.utils.parseEther("" + lpValues);
+            let valueInEther = ethers.utils.parseEther("" + withdrawLpValues);
             let withdrawTxResult = await tx(writeContracts[contractName]["withdraw"](valueInEther));
             console.log("withdrawTxResult:", withdrawTxResult);
-            setLpValues('');
+            setWithdrawLpValues('');
             setLpLoading(false);
             }}>
              Withdraw
         </Button>
-        </div>
+      
       </div>,
     );
   }
@@ -272,7 +316,6 @@ export default function Dex(props) {
        
         <div style={{ padding: 20 }}>
           <Curve
-
             addingEth={swap == 0 ? values["ETH"] : 0}
             addingToken={swap == 1 ? values["RLCS"] : 0}
             ethReserve={ethBalanceFloat}
@@ -282,16 +325,5 @@ export default function Dex(props) {
           />
         </div>
       </div>
-      /* <Col span={8}>
-      <Contract
-            name="Realcees"
-            signer={props.signer}
-            provider={props.localProvider}
-            show={["balanceOf", "approve"]}
-            address={props.address}
-            blockExplorer={props.blockExplorer}
-            contractConfig={props.contractConfig}
-          />
-          </Col> */
   );
 }

@@ -33,7 +33,7 @@ export default function Events({ contracts, contractName, eventName, localProvid
         renderItem={item => {
           if (eventName.includes("Swap")) {
               return (
-                <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
+                <List.Item key={item.blockNumber + "_" + item.args[0].toString()+ item.args[2].toString()}>
                   <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
                   Swap
                   {eventName.indexOf("E") == 0 ? (
@@ -50,9 +50,9 @@ export default function Events({ contracts, contractName, eventName, localProvid
                   )}
                 </List.Item>
               );} 
-              else {
+              else if (eventName.includes("Liquidity")){
                 return (
-                  <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
+                  <List.Item key={item.blockNumber + "_" + item.args[0].toString()+ item.args[2].toString()}>
                     <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
                     {eventName.includes("Provided") ? ( <span>Provided</span> ) : ( <span>Removed</span> )}
                       <span>
@@ -62,7 +62,16 @@ export default function Events({ contracts, contractName, eventName, localProvid
                       </span>
 
                   </List.Item>
-                );}   
+                );} else {
+                  return (
+                    <List.Item key={item.blockNumber + "_" + item.args[0].toString() + item.args[2].toString()}>
+                    <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
+                     Approve
+                    <Address address={item.args[1].toString()} ensProvider={mainnetProvider} fontSize={16} />
+                    <TokenBalance balance={item.args[2]} provider={localProvider} /> Rlcs 
+                  </List.Item>
+                  );
+                }  
         }}
       />
     </div>

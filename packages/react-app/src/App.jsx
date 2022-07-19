@@ -512,27 +512,6 @@ function App(props) {
           ) : (
             "Please deploy the contract"
           )}
-          {/* TODO: The DEX.jsx file actually logs a bunch of the results so we think that instead of creating 
-          completely new event components (or whatever), we would figure out how to work with the txs that are happening
-           as a result of EthersJS calling the respective functions in DEX.jsx. 😵 
-           Lines 321-335 are an example of attempting to place emitted events on the front-page UI. 
-           It is not working though for now! */}
-          {/* <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
-            <div>👀 DEX Events:</div>
-            <List
-              dataSource={EthToTokenSwapEvents}
-              renderItem={item => {
-                return (
-                  <List.Item key={item.blockNumber}>
-                    <Address value={item.args[0]} ensProvider={localProvider} fontSize={16} />
-                    <Balance tokenOutput={item.args[1]} />
-                    <Balance ethInput={item.args[2]} />
-                  </List.Item>
-                );
-              }}
-            />
-          </div> */}
-          {/* adding slide out debug  */}
       <Button  style={{position : "fixed", left:"26px", top: 130}} type="primary" onClick={showDrawer}>
           Debug Contracts
       </Button>
@@ -592,6 +571,15 @@ function App(props) {
             contracts={readContracts}
             contractName="DEX"
             eventName="LiquidityRemoved"
+            localProvider={localProvider}
+            mainnetProvider={mainnetProvider}
+            startBlock={1}
+          />
+
+          <Events
+            contracts={readContracts}
+            contractName="Realcees"
+            eventName="Approval"
             localProvider={localProvider}
             mainnetProvider={mainnetProvider}
             startBlock={1}
