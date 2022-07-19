@@ -26,19 +26,6 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor } from "./helpers";
-// import Hints from "./Hints";
-import { ExampleUI, Hints, Subgraph } from "./views";
-import cmLogo from "./images/cm_logo.jpg"
-
-function importAll(r) {
-  let images = {};
-  r.keys().map((item, index) => {
-    images[item.replace("./", "")] = r(item);
-  });
-  return images;
-}
-
-const diceImages = importAll(require.context("./images/", false, /\.(png)$/));
 
 const { ethers } = require("ethers");
 /*
