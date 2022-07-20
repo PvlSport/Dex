@@ -217,7 +217,7 @@ export default function Dex(props) {
               loading ={lpLoading}
               onClick={ async () => {
               setLpLoading(true)
-              let valueInToken= ethers.utils.parseEther(parseFloat(lpTokenValues).toFixed(18).toString()) ; // calculated value... 
+              let valueInToken= ethers.utils.parseEther(parseFloat(lpTokenValues * 1.001 ).toFixed(18).toString()) ; // 0.1% more than needed 
               console.log("valueInToken approve function : ",valueInToken)
               await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
                 gasLimit: 200000,}),);
