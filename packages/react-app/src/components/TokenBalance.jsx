@@ -7,7 +7,7 @@ export default function TokenBalance(props) {
   const [dollarMode, setDollarMode] = useState(true);
 
   const tokenContract = props.contracts && props.contracts[props.name];
-  const balance = useTokenBalance(tokenContract, props.address, 1777);
+  const balance = useTokenBalance(tokenContract, props.address, 100);
 
   let floatBalance = parseFloat("0.00");
 

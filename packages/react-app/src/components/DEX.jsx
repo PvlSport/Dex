@@ -15,21 +15,17 @@ const contractName = "DEX";
 const tokenName = "Realcees";
 
 export default function Dex(props) {
-  let display = [];
-
-  const [form, setForm] = useState({});
+  let displaySwap = [];
   const [values, setValues] = useState({});
   const tx = props.tx;
-
   const writeContracts = props.writeContracts;
-
   const contractAddress = props.readContracts[contractName].address;
   const tokenAddress = props.readContracts[tokenName].address;
   const contractBalance = useBalance(props.localProvider, contractAddress);
-  const tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, 120); //replaced props.localProvider by 120 (120 sec ??)
+  const tokenBalance = useTokenBalance(props.readContracts[tokenName], contractAddress, 100); //replaced props.localProvider by 120 (100 mSec ??)
   const liquidity = useContractReader(props.readContracts, contractName, "totalLiquidity");
 
-  //fixing tokanBlance "issue : "
+  //fixing tokanBlance "issue" : 
   const [tokenBalanceFloat, setTokenbalanceFloat] = useState();
   const [ethBalanceFloat, setEthBalanceFloat] = useState();;
   useEffect ( async () => {
@@ -67,14 +63,17 @@ export default function Dex(props) {
 
   const getPrice = async (title, value) => {
     if (value === '') return '';
-    let reserves = await props.readContracts[contractName].getReserves();
-    let valueBN = ethers.utils.parseEther("" + value);
-    console.log(reserves)
-    let xReserves = title == "ETH" ? reserves[0] : reserves[1]
-    let yReserves = title == "RLCS" ? reserves[0] : reserves[1]
-    let price = await props.readContracts[contractName].price(valueBN, xReserves, yReserves);
-    return (ethers.utils.formatEther(price))
+    let valueBN = ethers.utils.parseEther(value.toString());
+    let xReserves = title == "ETH" ?  contractBalance : tokenBalance;
+    let yReserves = title == "RLCS" ? contractBalance : tokenBalance;
+    let price = Math.trunc(((valueBN * 997) *  yReserves) / ((xReserves * 1000)+(valueBN * 997)));
+    let newValues =[];
+    newValues[title] = value;
+    newValues[path[swap ? 0 : 1 ]] = ethers.utils.formatEther(price.toString());
+    setValues(newValues);
+    checkButtonVisibility (value);
   }
+
   async function checkLpButtonVisibility (_value) {
     let allowance = await allowanceCM();
     if ( _value <= ethers.utils.formatEther(allowance)) {
@@ -107,15 +106,11 @@ export default function Dex(props) {
             <Input
               disabled={disable}
               addonAfter={icon}
-              onChange={async e => {
+              onChange={e => {
                 let newValues = { ...values };
-                console.log("newValues", newValues)
                 newValues[title] = e.target.value;
-                newValues[path[swap ? 0 : 1 ]] = await getPrice(title, e.target.value);
-                console.log("etargeted : ",e.target.value)
                 setValues(newValues);
-                console.log("values", values)
-                await checkButtonVisibility (e.target.value)
+                setTimeout(() => getPrice(title, e.target.value), 500);
               }}
               value={values[title]}
             />
@@ -124,7 +119,8 @@ export default function Dex(props) {
       </Row>
     );
   };
-  let displaySwap = [];
+
+ 
   if (props.readContracts && props.readContracts[contractName]) {
     displaySwap.push(
       <div>
@@ -221,8 +217,8 @@ export default function Dex(props) {
               loading ={lpLoading}
               onClick={ async () => {
               setLpLoading(true)
-              let valueInToken= ethers.utils.parseEther(lpTokenValues.toString()) ; // calculated value... 
-              console.log("valueInToken : ",valueInToken)
+              let valueInToken= ethers.utils.parseEther(parseFloat(lpTokenValues).toFixed(18).toString()) ; // calculated value... 
+              console.log("valueInToken approve function : ",valueInToken)
               await tx(writeContracts[tokenName].approve(props.readContracts[contractName].address, valueInToken, {
                 gasLimit: 200000,}),);
               setLpLoading(false)
@@ -237,7 +233,8 @@ export default function Dex(props) {
           loading ={lpLoading}
           onClick={async () => {
             setLpLoading(true);
-            let valueInEther = ethers.utils.parseEther(lpValues.toString());
+            let valueInEther = ethers.utils.parseEther(parseFloat(lpValues).toFixed(18).toString());
+            console.log("value in ether deposit function : " ,valueInEther)
             await tx(writeContracts[contractName]["deposit"]({ value: valueInEther, gasLimit: 200000 }));
             setLpValues('');
             setLpTokenValues('');
@@ -271,7 +268,7 @@ export default function Dex(props) {
           loading ={lpLoading}
           onClick={async () => {
             setLpLoading(true);
-            let valueInEther = ethers.utils.parseEther(withdrawLpValues.toString());
+            let valueInEther = ethers.utils.parseEther(parseFloat(withdrawLpValues).toFixed(18).toString());
             let withdrawTxResult = await tx(writeContracts[contractName]["withdraw"](valueInEther));
             console.log("withdrawTxResult:", withdrawTxResult);
             setWithdrawLpValues('');
