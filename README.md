@@ -1,11 +1,6 @@
 # 🏗 scaffold-eth | 🏰 BuidlGuidl
 
 
-TODO : 
-       - Tests
-
-
-Trying to do it from "scratch" at least from challenge 3 :p
 
 ## 🚩 **Challenge 4: Minimum Viable Exchange**
 
