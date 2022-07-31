@@ -20,7 +20,20 @@ import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
 import WalletLink from "walletlink";
 import Web3Modal from "web3modal";
 import "./App.css";
-import { Address, Account, Balance, Contract, Faucet, GasGauge, Header, Ramp, ThemeSwitch, TokenBalance, Dex , Events} from "./components";
+import {
+  Address,
+  Account,
+  Balance,
+  Contract,
+  Faucet,
+  GasGauge,
+  Header,
+  Ramp,
+  ThemeSwitch,
+  TokenBalance,
+  Dex,
+  Events,
+} from "./components";
 import { INFURA_ID, NETWORK, NETWORKS, ALCHEMY_KEY } from "./constants";
 import externalContracts from "./contracts/external_contracts";
 // contracts
@@ -265,8 +278,8 @@ function App(props) {
       yourLocalBalance &&
       yourMainnetBalance &&
       readContracts &&
-      writeContracts// &&
-    //  mainnetContracts
+      writeContracts // &&
+      //  mainnetContracts
     ) {
       console.log("_____________________________________ 🏗 scaffold-eth _____________________________________");
       console.log("🌎 mainnetProvider", mainnetProvider);
@@ -288,7 +301,7 @@ function App(props) {
     yourMainnetBalance,
     readContracts,
     writeContracts,
-   // mainnetContracts,
+    // mainnetContracts,
   ]);
 
   let networkDisplay = "";
@@ -438,26 +451,32 @@ function App(props) {
     );
   }
 
- //adding slide out debug states 
- const [debugContractToShow, setDebugContractToShow] = useState('');
+  //adding slide out debug states
+  const [debugContractToShow, setDebugContractToShow] = useState("");
 
- const contractsToShow = Object.keys(readContracts).map ( (_contractName) => {
-   if (!debugContractToShow) setDebugContractToShow(_contractName) //if there as been no click show the last contract that've been deployed
-   return(
-     <Menu.Item key={`${_contractName}`}>
-    <Link  onClick={ () => { setDebugContractToShow(_contractName)}}>{_contractName}</Link>
-    </Menu.Item>
-       );
-     }); 
-   const [visible, setVisible] = useState(false);
-   const showDrawer = () => {
-       setVisible(true);
-     };
-   
-   const onClose = () => {
-       setVisible(false);
-     };
-//end of slide out states
+  const contractsToShow = Object.keys(readContracts).map(_contractName => {
+    if (!debugContractToShow) setDebugContractToShow(_contractName); //if there as been no click show the last contract that've been deployed
+    return (
+      <Menu.Item key={`${_contractName}`}>
+        <Link
+          onClick={() => {
+            setDebugContractToShow(_contractName);
+          }}
+        >
+          {_contractName}
+        </Link>
+      </Menu.Item>
+    );
+  });
+  const [visible, setVisible] = useState(false);
+  const showDrawer = () => {
+    setVisible(true);
+  };
+
+  const onClose = () => {
+    setVisible(false);
+  };
+  //end of slide out states
 
   return (
     <div className="App">
@@ -472,17 +491,22 @@ function App(props) {
                 setRoute("/");
               }}
               to="/"
-            > DEX
-            
+            >
+              {" "}
+              DEX
             </Link>
           </Menu.Item>
           <Menu.Item key="/Events">
-          <Link onClick={() => {
-            setRoute("/Events");
-          }} 
-          to="/Events">Eventlist</Link>
-        </Menu.Item>
-         {/*  <Menu.Item key="/debug">
+            <Link
+              onClick={() => {
+                setRoute("/Events");
+              }}
+              to="/Events"
+            >
+              Eventlist
+            </Link>
+          </Menu.Item>
+          {/*  <Menu.Item key="/debug">
             <Link
               onClick={() => {
                 setRoute("/debug");
@@ -493,99 +517,98 @@ function App(props) {
             </Link>
           </Menu.Item> */}
         </Menu>
-        
+
         <Switch>
           <Route exact path="/">
-          {readContracts && readContracts.DEX && address && localProvider ? (
-            <Dex
-              tx={tx}
-              writeContracts={writeContracts}
+            {readContracts && readContracts.DEX && address && localProvider ? (
+              <Dex
+                tx={tx}
+                writeContracts={writeContracts}
+                localProvider={localProvider}
+                mainnetProvider={mainnetProvider}
+                blockExplorer={blockExplorer}
+                address={address} //this is causing issues
+                readContracts={readContracts} //this is causing issues
+                contractConfig={contractConfig}
+                signer={userSigner}
+                price={price}
+              />
+            ) : (
+              "Please deploy the contract"
+            )}
+            <Button style={{ position: "fixed", left: "26px", top: 130 }} type="primary" onClick={showDrawer}>
+              Debug Contracts
+            </Button>
+            <Drawer
+              contentWrapperStyle={{ width: "40vw" }}
+              title="Debug"
+              placement="left"
+              closable={true}
+              onClose={onClose}
+              visible={visible}
+              key="right"
+            >
+              <Address value={address} />
+              <Menu selectedKeys={debugContractToShow} mode="horizontal">
+                {contractsToShow}
+              </Menu>
+
+              <Contract
+                name={debugContractToShow}
+                price={price}
+                signer={userSigner}
+                provider={localProvider}
+                address={address}
+                blockExplorer={blockExplorer}
+                contractConfig={contractConfig}
+              />
+            </Drawer>
+          </Route>
+          <Route path="/Events">
+            <Events
+              contracts={readContracts}
+              contractName="DEX"
+              eventName="EthToTokenSwap"
               localProvider={localProvider}
               mainnetProvider={mainnetProvider}
-              blockExplorer={blockExplorer}
-              address={address} //this is causing issues
-              readContracts={readContracts} //this is causing issues
-              contractConfig={contractConfig}
-              signer={userSigner}
-              price={price}
+              startBlock={1}
             />
-          ) : (
-            "Please deploy the contract"
-          )}
-      <Button  style={{position : "fixed", left:"26px", top: 130}} type="primary" onClick={showDrawer}>
-          Debug Contracts
-      </Button>
-      <Drawer
-        contentWrapperStyle={{width:"40vw"}}
-        title="Debug"
-        placement="left"
-        closable={true}
-        onClose={onClose}
-        visible={visible}
-        key="right">
-         <Address value={address} />
-        <Menu selectedKeys={debugContractToShow} mode="horizontal">          
-          {contractsToShow}
-        </Menu>
-        
-        <Contract
-            name={debugContractToShow}
-            price={price}
-            signer={userSigner}
-            provider={localProvider}
-            address={address}
-            blockExplorer={blockExplorer}
-            contractConfig={contractConfig}
-          /> 
-      </Drawer>
-        </Route>
-        <Route path="/Events">
-          <Events
-            contracts={readContracts}
-            contractName="DEX"
-            eventName="EthToTokenSwap"
-            localProvider={localProvider}
-            mainnetProvider={mainnetProvider}
-            startBlock={1}
-          />
 
-          <Events
-            contracts={readContracts}
-            contractName="DEX"
-            eventName="TokenToEthSwap"
-            localProvider={localProvider}
-            mainnetProvider={mainnetProvider}
-            startBlock={1}
-          />
+            <Events
+              contracts={readContracts}
+              contractName="DEX"
+              eventName="TokenToEthSwap"
+              localProvider={localProvider}
+              mainnetProvider={mainnetProvider}
+              startBlock={1}
+            />
 
-          <Events
-            contracts={readContracts}
-            contractName="DEX"
-            eventName="LiquidityProvided"
-            localProvider={localProvider}
-            mainnetProvider={mainnetProvider}
-            startBlock={1}
-          />
+            <Events
+              contracts={readContracts}
+              contractName="DEX"
+              eventName="LiquidityProvided"
+              localProvider={localProvider}
+              mainnetProvider={mainnetProvider}
+              startBlock={1}
+            />
 
-          <Events
-            contracts={readContracts}
-            contractName="DEX"
-            eventName="LiquidityRemoved"
-            localProvider={localProvider}
-            mainnetProvider={mainnetProvider}
-            startBlock={1}
-          />
+            <Events
+              contracts={readContracts}
+              contractName="DEX"
+              eventName="LiquidityRemoved"
+              localProvider={localProvider}
+              mainnetProvider={mainnetProvider}
+              startBlock={1}
+            />
 
-          <Events
-            contracts={readContracts}
-            contractName="Realcees"
-            eventName="Approval"
-            localProvider={localProvider}
-            mainnetProvider={mainnetProvider}
-            startBlock={1}
-          />
-        
-             
+            <Events
+              contracts={readContracts}
+              contractName="Realcees"
+              eventName="Approval"
+              localProvider={localProvider}
+              mainnetProvider={mainnetProvider}
+              startBlock={1}
+            />
           </Route>
           {/* <Route exact path="/debug">
             {/*
